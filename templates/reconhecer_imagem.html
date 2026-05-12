@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header py-3 text-center">
+                <h4 class="mb-0"><i class="bi bi-image"></i> Reconhecimento por Imagem</h4>
+            </div>
+            <div class="card-body p-4 text-center">
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="fotoInput" class="form-label text-secondary">Selecione uma imagem para análise</label>
+                        <input class="form-control form-control-lg" type="file" id="fotoInput" name="foto" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg px-5" id="btn-analisar">
+                        <i class="bi bi-search"></i> Analisar Imagem
+                    </button>
+                </form>
+
+                <div id="loading" class="mt-4 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-2 text-secondary">Processando imagem e buscando faces...</p>
+                </div>
+
+                <div id="resultado-container" class="mt-5 d-none text-start">
+                    <h5 class="border-bottom pb-2 mb-3">Resultados da Análise</h5>
+                    <div id="resultado-lista"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('upload-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('fotoInput');
+    if (!fileInput.files.length) return;
+
+    const formData = new FormData();
+    formData.append('foto', fileInput.files[0]);
+
+    const btn = document.getElementById('btn-analisar');
+    const loading = document.getElementById('loading');
+    const container = document.getElementById('resultado-container');
+    const lista = document.getElementById('resultado-lista');
+
+    btn.disabled = true;
+    loading.classList.remove('d-none');
+    container.classList.add('d-none');
+
+    try {
+        const response = await fetch('/api/reconhecer_upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+        
+        loading.classList.add('d-none');
+        container.classList.remove('d-none');
+        btn.disabled = false;
+
+        if (data.erro) {
+            lista.innerHTML = `<div class="alert alert-danger">${data.erro}</div>`;
+            return;
+        }
+
+        if (!data.rostos || data.rostos.length === 0) {
+            lista.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> Nenhum rosto detectado na imagem.</div>`;
+            return;
+        }
+
+        let html = '<ul class="list-group list-group-flush bg-transparent">';
+        data.rostos.forEach(rosto => {
+            if(rosto.id) {
+                html += `
+                <li class="list-group-item bg-transparent text-light border-secondary">
+                    <i class="bi bi-person-check-fill text-success fs-4 me-2 align-middle"></i>
+                    <span class="fs-5"><strong>${rosto.nome}</strong></span><br>
+                    <small class="text-secondary ms-4">ID: ${rosto.id} &bull; Confiança: ${rosto.confianca}</small>
+                </li>`;
+            } else {
+                html += `
+                <li class="list-group-item bg-transparent text-light border-secondary">
+                    <i class="bi bi-person-x-fill text-danger fs-4 me-2 align-middle"></i>
+                    <span class="fs-5">Pessoa Desconhecida</span>
+                </li>`;
+            }
+        });
+        html += '</ul>';
+        lista.innerHTML = html;
+
+    } catch (error) {
+        console.error(error);
+        loading.classList.add('d-none');
+        btn.disabled = false;
+        lista.innerHTML = `<div class="alert alert-danger">Erro de comunicação com o servidor.</div>`;
+        container.classList.remove('d-none');
+    }
+});
+</script>
+{% endblock %}

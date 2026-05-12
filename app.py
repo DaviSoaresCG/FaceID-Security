@@ -53,34 +53,46 @@ def cadastro():
     if request.method == 'POST':
         nome = request.form['nome']
         cpf = request.form['cpf']
-        file = request.files['foto']
+        files = request.files.getlist('foto')
 
-        if not file:
+        if not files or files[0].filename == '':
             return render_template('cadastro.html', erro="Nenhuma imagem enviada.")
-
-        # Save temporarily to validate
-        path = os.path.join(UPLOAD_FOLDER, file.filename)
-        file.save(path)
-
-        # Validate face
-        image = face_recognition.load_image_file(path)
-        faces = face_recognition.face_encodings(image)
-
-        if len(faces) == 0:
-            os.remove(path)
-            return render_template('cadastro.html', erro="Nenhum rosto detectado na imagem. Tente novamente com uma foto mais clara.")
-        
-        # We take the first face found
-        face_encoding = faces[0]
-        encoding_bytes = pickle.dumps(face_encoding)
 
         conn = get_db()
         cur = conn.cursor()
         cur.execute("INSERT INTO pessoas(nome, cpf) VALUES(?, ?)", (nome, cpf))
         pessoa_id = cur.lastrowid
+        
+        rostos_salvos = 0
 
-        cur.execute("INSERT INTO imagens(pessoa_id, caminho_imagem, encoding) VALUES(?, ?, ?)",
-                    (pessoa_id, path, encoding_bytes))
+        for file in files:
+            if file.filename == '':
+                continue
+                
+            path = os.path.join(UPLOAD_FOLDER, file.filename)
+            file.save(path)
+
+            image = face_recognition.load_image_file(path)
+            faces = face_recognition.face_encodings(image)
+
+            if len(faces) == 0:
+                os.remove(path)
+                continue # Skip images without faces
+            
+            face_encoding = faces[0]
+            encoding_bytes = pickle.dumps(face_encoding)
+
+            cur.execute("INSERT INTO imagens(pessoa_id, caminho_imagem, encoding) VALUES(?, ?, ?)",
+                        (pessoa_id, path, encoding_bytes))
+            rostos_salvos += 1
+
+        if rostos_salvos == 0:
+            # Revert person creation if no faces were found in any image
+            cur.execute("DELETE FROM pessoas WHERE id = ?", (pessoa_id,))
+            conn.commit()
+            conn.close()
+            return render_template('cadastro.html', erro="Nenhum rosto detectado nas imagens enviadas. Tente novamente.")
+
         conn.commit()
         conn.close()
 
@@ -94,6 +106,27 @@ def lista():
     pessoas = conn.execute("SELECT * FROM pessoas ORDER BY id DESC").fetchall()
     conn.close()
     return render_template('lista.html', pessoas=pessoas)
+
+@app.route('/deletar/<int:id>', methods=['POST'])
+def deletar(id):
+    conn = get_db()
+    
+    # Get images to delete from filesystem
+    imagens = conn.execute("SELECT caminho_imagem FROM imagens WHERE pessoa_id = ?", (id,)).fetchall()
+    for img in imagens:
+        try:
+            if os.path.exists(img['caminho_imagem']):
+                os.remove(img['caminho_imagem'])
+        except Exception as e:
+            print(f"Error removing file {img['caminho_imagem']}: {e}")
+            
+    # Delete from database
+    conn.execute("DELETE FROM imagens WHERE pessoa_id = ?", (id,))
+    conn.execute("DELETE FROM pessoas WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    
+    return redirect(url_for('lista'))
 
 def get_known_encodings():
     conn = get_db()

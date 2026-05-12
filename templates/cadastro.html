@@ -1,8 +1,40 @@
+{% extends 'base.html' %}
 
-<h2>Cadastro</h2>
-<form method='POST' enctype='multipart/form-data'>
-Nome: <input name='nome'><br>
-CPF: <input name='cpf'><br>
-Foto: <input type='file' name='foto'><br>
-<button type='submit'>Salvar</button>
-</form>
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-center py-3">
+                <h4 class="mb-0"><i class="bi bi-person-plus"></i> Novo Cadastro</h4>
+            </div>
+            <div class="card-body p-4">
+                {% if erro %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i> {{ erro }}
+                </div>
+                {% endif %}
+
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Nome Completo</label>
+                        <input type="text" class="form-control form-control-lg" name="nome" required placeholder="Ex: João da Silva">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">CPF</label>
+                        <input type="text" class="form-control form-control-lg" name="cpf" required placeholder="000.000.000-00">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-secondary">Fotos Faciais</label>
+                        <input class="form-control" type="file" name="foto" accept="image/*" multiple required>
+                        <div class="form-text text-secondary mt-2"><i class="bi bi-info-circle"></i> Você pode selecionar múltiplas imagens de uma vez. As imagens devem conter o rosto visível para o treinamento do sistema.</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">Cadastrar Pessoa</button>
+                        <a href="{{ url_for('lista') }}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,7 +1,33 @@
+{% extends 'base.html' %}
 
-<h1>FaceID Security</h1>
-<ul>
-<li><a href='/cadastro'>Cadastro</a></li>
-<li><a href='/lista'>Lista Pessoas</a></li>
-<li><a href='/reconhecer'>Reconhecimento</a></li>
-</ul>
+{% block content %}
+<div class="row text-center align-items-center h-100" style="min-height: 70vh;">
+    <div class="col-md-12">
+        <h1 class="display-4 fw-bold mb-4">Bem-vindo ao FaceID Security</h1>
+        <p class="lead text-secondary mb-5">Sistema avançado de reconhecimento facial em tempo real.</p>
+        
+        <div class="row justify-content-center g-4">
+            <div class="col-md-4">
+                <div class="card p-4 text-center h-100">
+                    <i class="bi bi-people text-primary" style="font-size: 3rem;"></i>
+                    <h3 class="mt-3">Pessoas Registradas</h3>
+                    <div class="stat-value">{{ total_pessoas }}</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-4 text-center h-100">
+                    <i class="bi bi-images text-success" style="font-size: 3rem;"></i>
+                    <h3 class="mt-3">Faces Cadastradas</h3>
+                    <div class="stat-value">{{ total_imagens }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <a href="{{ url_for('reconhecer_webcam') }}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">
+                <i class="bi bi-camera me-2"></i> Iniciar Reconhecimento
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
