@@ -1,0 +1,8 @@
+
+<h2>Pessoas</h2>
+<ul>
+{% for p in pessoas %}
+<li>{{p.id}} - {{p.nome}} - {{p.cpf}}</li>
+{% endfor %}
+</ul>
+<a href='/'>Voltar</a>
