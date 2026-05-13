@@ -1,10 +1,10 @@
-import base64
+import base64 #para codificação de imagem
 import os
 import sqlite3
-import pickle
+import pickle #para serialização de objetos e salvar o rosto no banco de dados
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-import cv2
-import face_recognition
+import cv2 #para processamento de imagem
+import face_recognition 
 import numpy as np
 
 app = Flask(__name__)
