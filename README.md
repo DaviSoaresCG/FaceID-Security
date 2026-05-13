@@ -9,3 +9,6 @@ python app.py
 
 Abra no navegador:
 http://127.0.0.1:5000
+
+## Link Online
+https://mi-semipolitical-ideographically.ngrok-free.dev
