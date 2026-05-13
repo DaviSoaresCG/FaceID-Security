@@ -1,9 +1,9 @@
-import base64 #para codificação de imagem
+import base64 #for image coding
 import os
 import sqlite3
-import pickle #para serialização de objetos e salvar o rosto no banco de dados
+import pickle #for object serialization and save face in database
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-import cv2 #para processamento de imagem
+import cv2 #for image processing
 import face_recognition 
 import numpy as np
 
@@ -57,6 +57,12 @@ def cadastro():
 
         if not files or files[0].filename == '':
             return render_template('cadastro.html', erro="Nenhuma imagem enviada.")
+        
+        if not nome or not cpf:
+            return render_template('cadastro.html', erro="Nome e CPF são obrigatórios.")
+
+        if len(files) > 5:
+            return render_template('cadastro.html', erro="O limite de imagens é de 5.")
 
         conn = get_db()
         cur = conn.cursor()
